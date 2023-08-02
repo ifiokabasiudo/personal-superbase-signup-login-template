@@ -1,16 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import Link from 'next/link'
 
-export default function Login() {
+export default function Login({user}) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [view, setView] = useState('sign-in')
   const router = useRouter()
   const supabase = createClientComponentClient()
+
+  console.log(user);
+
+  useEffect(() => {
+    if(user) {
+      router.push("/");
+    }
+  }, []);
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -21,21 +29,24 @@ export default function Login() {
        password,
      });
 
-     if (error) {
-       console.log("An error occurred:", error.message);
-       // Handle the error, show an error message, etc.
-       return;
-     }
-
-     if (data) {
+     if (data.user) {
        // Sign-in was successful, navigate to the home page or any other desired route.
        router.push("/");
-       router.reload(); // Alternatively, you can use router.push('/') again to refresh the page.
-     } else {
-       console.log("Invalid email or password");
-       // Handle the scenario where the email and password didn't match any user.
-       // You might want to show an error message to the user or clear the input fields, etc.
-     }} catch (error) {
+       // Alternatively, you can use router.push('/') again to refresh the page.
+     }
+
+     if(error) {
+       if(error.message === "Failed to fetch") {
+         alert("Check your Internet Connection");
+         return;
+       }
+
+       if (error.message === "Invalid login credentials") {
+         alert("Incorrect username or password");
+       }
+     }
+
+   } catch (error) {
       console.log("An error occured with error statement: " + error)
     }
   }
@@ -88,9 +99,11 @@ export default function Login() {
             value={password}
             placeholder="••••••••"
           />
+
               <button className="bg-green-700 rounded px-4 py-2 text-white mb-6">
                 Sign In
               </button>
+
               <p className="text-sm text-center">
                 Don't have an account?
                 {" "}
